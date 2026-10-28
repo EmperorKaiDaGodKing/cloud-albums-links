@@ -1,0 +1,17 @@
+# Local album links. This file can hold a private share URL.
+photo-feed.local.json
+
+# Downloaded photos and videos, and any JSON you save yourself.
+downloads/
+photo-feed-downloads/
+output/
+photo-feed-out/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+.mypy_cache/

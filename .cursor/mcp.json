@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "photo-feed": {
+      "command": "python3",
+      "args": ["-m", "photo_feed", "mcp"]
+    }
+  }
+}
