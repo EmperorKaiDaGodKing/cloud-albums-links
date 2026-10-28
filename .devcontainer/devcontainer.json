@@ -9,5 +9,5 @@
       }
     }
   },
-  "postCreateCommand": "python3 -m unittest discover -s tests"
+  "postCreateCommand": "python -m photo_feed --help && python -m unittest discover -s tests"
 }

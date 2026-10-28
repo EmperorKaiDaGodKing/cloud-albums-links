@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "photo-feed"
+version = "1.0.0"
+description = "Read photos and videos from a public shared album link."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+photo-feed = "photo_feed.cli:main"
+
+[tool.setuptools]
+packages = ["photo_feed"]

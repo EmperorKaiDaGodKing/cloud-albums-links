@@ -1,7 +1,9 @@
-# Local album links. This file can hold a private share URL.
+# Local album links. Anything in here can see the album.
 photo-feed.local.json
+*.local.json
+.env
 
-# Downloaded photos and videos, and any JSON you save yourself.
+# Downloaded photos, videos, and JSON listings. Do not commit these.
 downloads/
 photo-feed-downloads/
 output/
@@ -15,3 +17,6 @@ venv/
 .pytest_cache/
 *.egg-info/
 .mypy_cache/
+
+# Mac
+.DS_Store
