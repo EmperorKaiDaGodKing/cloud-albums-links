@@ -106,7 +106,7 @@ Save copies of the files on this computer only (not on GitHub):
 python3 -m photo_feed list-photos --download
 ```
 
-Files go in `downloads/`. That folder is git-ignored. You can also use `output/` if you want to save the JSON:
+Files go in `downloads/`. That folder is git-ignored, so the command stays quiet. If you pick another folder and git is not ignoring it, the command prints a warning: this repo is public, so do not commit the photos. You can also use `output/` if you want to save the JSON:
 
 ```bash
 python3 -m photo_feed list-photos > output/list.json

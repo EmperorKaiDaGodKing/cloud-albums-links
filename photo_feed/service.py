@@ -6,13 +6,14 @@ Callers pass a fetch function in tests. The command line uses the real network.
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import Callable, Never
 from urllib.parse import urlparse
 
 from photo_feed.albums import Album, discover_albums, extract_urls, provider_for, slug
-from photo_feed.download import ensure_safe_download_dir, file_path_for
+from photo_feed.download import download_commit_warning, ensure_safe_download_dir, file_path_for
 from photo_feed.errors import AlbumError
 from photo_feed.google_photos import looks_like_google_album, parse_album_html, parse_photo_html
 from photo_feed.net import download_to_file, fetch_text as default_fetch_text
@@ -153,8 +154,12 @@ def _read_google(
             return _error_payload(album, SHORT_LINK_ERROR, parsed.title)
         return _error_payload(album, EMPTY_ERROR, parsed.title)
 
+    warning = None
     if download_dir is not None:
         _download_items(items, download_dir, fetch_download)
+        warning = download_commit_warning(download_dir / "photo.jpg")
+        if warning:
+            print(warning, file=sys.stderr)
 
     payload = {
         "album": {**album.to_dict(), "title": parsed.title},
@@ -163,6 +168,8 @@ def _read_google(
         "note": " ".join(notes) if notes else None,
         "items": items,
     }
+    if warning:
+        payload["warning"] = warning
     if download_dir is not None:
         manifest = download_dir / "album.json"
         manifest.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
