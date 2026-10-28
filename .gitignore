@@ -1,0 +1,18 @@
+# Local album links. Anything in here can see the album.
+photo-feed.local.json
+*.local.json
+.env
+
+# Downloaded photos, videos, and JSON listings. Do not commit these.
+downloads/
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+
+# Mac
+.DS_Store

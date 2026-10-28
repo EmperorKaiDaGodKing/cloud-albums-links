@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "photo-feed": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["-m", "photo_feed", "mcp"],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  }
+}
