@@ -26,7 +26,9 @@ class PrivacyTest(unittest.TestCase):
         paths = [
             "downloads/pic.jpg",
             "downloads/photo-feed/album.json",
+            "photo-feed-downloads/pic.jpg",
             "output/result.json",
+            "photo-feed-out/result.json",
             "photo-feed.local.json",
             ".env",
         ]

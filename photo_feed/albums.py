@@ -3,7 +3,8 @@
 The search order is fixed:
 
 1. The PHOTO_FEED_URL environment variable (a Codespaces secret uses this name).
-2. photo-feed.local.json in the project folder (git-ignored).
+2. A local config file. PHOTO_FEED_CONFIG can point at that file. Otherwise
+   it is photo-feed.local.json in the project folder (git-ignored).
 3. Text files under shared-album-link-storage/.
 """
 
@@ -24,6 +25,7 @@ Provider = Literal["google-photos", "terabox", "unknown"]
 NO_ALBUMS_NOTE = (
     "No album link found. Set the PHOTO_FEED_URL secret, "
     "or create photo-feed.local.json (it stays off GitHub), "
+    "or set PHOTO_FEED_CONFIG to a config file outside this folder, "
     "or put a link in a file under shared-album-link-storage/."
 )
 
@@ -61,7 +63,7 @@ def discover_albums(root: Path) -> Discovery:
             raise AlbumError("PHOTO_FEED_URL is set, but it is not a web link.")
         return Discovery("env", _albums_from_urls(urls, source="env", default_name="Photo feed"))
 
-    config_path = root / "photo-feed.local.json"
+    config_path = config_file_path(root)
     if config_path.is_file():
         configured = _albums_from_config(config_path)
         if configured:
@@ -71,6 +73,22 @@ def discover_albums(root: Path) -> Discovery:
     if stored:
         return Discovery("storage", stored)
     return Discovery(None, [], NO_ALBUMS_NOTE)
+
+
+def config_file_path(root: Path) -> Path:
+    """Where the local album list lives.
+
+    PHOTO_FEED_CONFIG, when set, is that path. A relative path is inside the
+    project folder. ``~`` is the home folder. When the variable is unset, the
+    file is photo-feed.local.json next to the program.
+    """
+    override = os.environ.get("PHOTO_FEED_CONFIG")
+    if override is not None and override.strip():
+        path = Path(override.strip()).expanduser()
+        if not path.is_absolute():
+            path = Path(root) / path
+        return path
+    return Path(root) / "photo-feed.local.json"
 
 
 def provider_for(url: str) -> Provider:
@@ -131,28 +149,29 @@ def _albums_from_urls(urls: list[str], source: str, default_name: str) -> list[A
 
 
 def _albums_from_config(path: Path) -> list[Album]:
+    label = path.name
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         raise AlbumError(
-            "photo-feed.local.json is not valid JSON. "
+            f"{label} is not valid JSON. "
             "Copy photo-feed.local.json.example and edit that."
         ) from None
     except OSError:
-        raise AlbumError("Could not read photo-feed.local.json.") from None
+        raise AlbumError(f"Could not read {label}.") from None
     if not isinstance(data, dict) or not isinstance(data.get("albums"), list):
         raise AlbumError(
-            "photo-feed.local.json must be an object with an albums list. "
+            f"{label} must be an object with an albums list. "
             "Copy photo-feed.local.json.example and edit that."
         )
     albums: list[Album] = []
     used: set[str] = set()
     for entry in data["albums"]:
         if not isinstance(entry, dict) or not isinstance(entry.get("url"), str):
-            raise AlbumError("Each album in photo-feed.local.json needs a url.")
+            raise AlbumError(f"Each album in {label} needs a url.")
         urls = extract_urls(entry["url"])
         if len(urls) != 1:
-            raise AlbumError("Each album in photo-feed.local.json needs a url that starts with http.")
+            raise AlbumError(f"Each album in {label} needs a url that starts with http.")
         name = str(entry.get("name") or "Album").strip() or "Album"
         base_id = str(entry.get("id") or slug(name)).strip() or slug(name)
         albums.append(

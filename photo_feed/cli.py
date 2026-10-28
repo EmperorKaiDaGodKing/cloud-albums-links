@@ -64,7 +64,8 @@ def _parser() -> argparse.ArgumentParser:
         description=(
             "Read photos and videos from a public shared album link. "
             "Links are read from the PHOTO_FEED_URL environment variable, "
-            "then photo-feed.local.json, then files in shared-album-link-storage/."
+            "then a config file (PHOTO_FEED_CONFIG or photo-feed.local.json), "
+            "then files in shared-album-link-storage/."
         ),
     )
     parser.add_argument("--version", action="version", version=f"photo-feed {__version__}")

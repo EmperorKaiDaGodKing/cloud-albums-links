@@ -32,7 +32,7 @@ python3 --version
 It stops at the first place that has a link:
 
 1. The environment variable `PHOTO_FEED_URL` (this is the Codespaces secret).
-2. A file named `photo-feed.local.json` in this folder. Git ignores that file, so it is not uploaded.
+2. A local config file. By default that is `photo-feed.local.json` in this folder. Git ignores that file, so it is not uploaded. To keep the file somewhere else, set `PHOTO_FEED_CONFIG` to its path (for example `~/albums/photo-feed.local.json`).
 3. Text files under `shared-album-link-storage/`. Empty files are skipped. A line that starts with `#` is a note, not a link.
 
 ## Set the PHOTO_FEED_URL secret
@@ -75,7 +75,13 @@ cd cloud-albums-links
 cp photo-feed.local.json.example photo-feed.local.json
 ```
 
-Open `photo-feed.local.json` in a text editor and replace the example link with your real link. Save. That file is git-ignored.
+Open `photo-feed.local.json` in a text editor and replace the example link with your real link. Save. That file is git-ignored. If you would rather keep that file outside the project, put it somewhere else and point at it:
+
+```bash
+export PHOTO_FEED_CONFIG="$HOME/albums/photo-feed.local.json"
+```
+
+`PHOTO_FEED_URL` still wins when it is set. A one-link secret is the right choice in a Codespace. `PHOTO_FEED_CONFIG` is for a file on your Mac.
 
 You can also type this in Terminal. It lasts until you close the window, and the link is saved in Terminal's command history, so the file is the better choice:
 

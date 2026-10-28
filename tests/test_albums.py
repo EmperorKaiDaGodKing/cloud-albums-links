@@ -17,7 +17,9 @@ FIXTURE_TERABOX = "https://www.terabox.com/s/fixture-share"
 class DiscoverAlbumsTest(unittest.TestCase):
     def setUp(self):
         self._previous = os.environ.get("PHOTO_FEED_URL")
+        self._config = os.environ.get("PHOTO_FEED_CONFIG")
         os.environ.pop("PHOTO_FEED_URL", None)
+        os.environ.pop("PHOTO_FEED_CONFIG", None)
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.storage = self.root / "shared-album-link-storage"
@@ -28,6 +30,10 @@ class DiscoverAlbumsTest(unittest.TestCase):
             os.environ.pop("PHOTO_FEED_URL", None)
         else:
             os.environ["PHOTO_FEED_URL"] = self._previous
+        if self._config is None:
+            os.environ.pop("PHOTO_FEED_CONFIG", None)
+        else:
+            os.environ["PHOTO_FEED_CONFIG"] = self._config
         self.tmp.cleanup()
 
     def test_env_var_wins_over_config_and_storage(self):
@@ -65,6 +71,65 @@ class DiscoverAlbumsTest(unittest.TestCase):
         self.assertEqual(found.albums[0].name, "Trip")
         self.assertEqual(found.albums[0].provider, "google-photos")
         self.assertEqual(found.albums[0].id, "trip")
+
+    def test_photo_feed_config_is_used_instead_of_the_default_file(self):
+        custom = self.root / "kept-off-github" / "albums.json"
+        custom.parent.mkdir()
+        custom.write_text(
+            '{"albums":[{"name":"Desk","url":"https://photos.google.com/share/FixtureFromConfig"}]}',
+            encoding="utf-8",
+        )
+        (self.root / "photo-feed.local.json").write_text(
+            '{"albums":[{"name":"Ignored","url":"https://photos.google.com/share/FixtureDefault"}]}',
+            encoding="utf-8",
+        )
+        os.environ["PHOTO_FEED_CONFIG"] = str(custom)
+
+        found = discover_albums(self.root)
+
+        self.assertEqual(found.source, "config")
+        self.assertEqual(found.albums[0].name, "Desk")
+        self.assertEqual(found.albums[0].url, "https://photos.google.com/share/FixtureFromConfig")
+
+    def test_photo_feed_url_wins_over_photo_feed_config(self):
+        os.environ["PHOTO_FEED_URL"] = FIXTURE_GOOGLE
+        custom = self.root / "albums.json"
+        custom.write_text(
+            '{"albums":[{"name":"Desk","url":"https://photos.google.com/share/FixtureFromConfig"}]}',
+            encoding="utf-8",
+        )
+        os.environ["PHOTO_FEED_CONFIG"] = str(custom)
+
+        found = discover_albums(self.root)
+
+        self.assertEqual(found.source, "env")
+        self.assertEqual(found.albums[0].url, FIXTURE_GOOGLE)
+
+    def test_relative_photo_feed_config_stays_inside_the_project(self):
+        os.environ["PHOTO_FEED_CONFIG"] = "secret/albums.json"
+        custom = self.root / "secret" / "albums.json"
+        custom.parent.mkdir()
+        custom.write_text(
+            '{"albums":[{"name":"Side","url":"https://photos.google.com/share/FixtureSide"}]}',
+            encoding="utf-8",
+        )
+
+        found = discover_albums(self.root)
+
+        self.assertEqual(found.albums[0].name, "Side")
+
+    def test_missing_photo_feed_config_skips_the_default_file(self):
+        os.environ["PHOTO_FEED_CONFIG"] = str(self.root / "missing.json")
+        (self.root / "photo-feed.local.json").write_text(
+            '{"albums":[{"name":"Ignored","url":"https://photos.google.com/share/FixtureDefault"}]}',
+            encoding="utf-8",
+        )
+        (self.storage / "summer-trip").write_text(FIXTURE_GOOGLE + "\n", encoding="utf-8")
+
+        found = discover_albums(self.root)
+
+        self.assertEqual(found.source, "storage")
+        self.assertEqual(found.albums[0].id, "summer-trip")
 
     def test_empty_config_list_falls_through_to_storage(self):
         (self.root / "photo-feed.local.json").write_text('{"albums":[]}', encoding="utf-8")

@@ -5,13 +5,17 @@ photo-feed.local.json
 
 # Downloaded photos, videos, and JSON listings. Do not commit these.
 downloads/
+photo-feed-downloads/
 output/
+photo-feed-out/
 
 # Python
 __pycache__/
 *.py[cod]
 .venv/
+venv/
 .pytest_cache/
+*.egg-info/
 .mypy_cache/
 
 # Mac
